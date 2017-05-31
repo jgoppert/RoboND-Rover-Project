@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="default" pattern="file[RoboND-Rover-Project]:code//*&amp;&amp;!file[RoboND-Rover-Project]:code/.ipynb_checkpoints//*&amp;&amp;!file:code/*.ipynb" />
+</component>
