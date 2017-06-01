@@ -35,6 +35,7 @@ ground_truth = mpimg.imread('../calibration_images/map_bw.png')
 # map output looks green in the display image
 ground_truth_3d = np.dstack((ground_truth*0, ground_truth*255, ground_truth*0)).astype(np.float)
 
+
 # Define RoverState() class to retain rover state parameters
 class RoverState():
     def __init__(self):
@@ -51,6 +52,7 @@ class RoverState():
         self.brake = 0 # Current brake value
         self.nav_angles = None # Angles of navigable terrain pixels
         self.nav_dists = None # Distances of navigable terrain pixels
+        self.nav_explore = None # Explored value of navigable terrain pixels
         self.ground_truth = ground_truth_3d # Ground truth worldmap
         self.mode = 'forward' # Current mode (can be forward or stop)
         self.throttle_set = 0.2 # Throttle setting when accelerating
@@ -75,6 +77,9 @@ class RoverState():
         self.near_sample = 0 # Will be set to telemetry value data["near_sample"]
         self.picking_up = 0 # Will be set to telemetry value data["picking_up"]
         self.send_pickup = False # Set to True to trigger rock pickup
+        self.goal_dist = 10 # distance to goal
+        self.goal_angle = 0 # angle to goal
+
 # Initialize our rover 
 Rover = RoverState()
 

@@ -9,6 +9,11 @@ def decision_step(Rover):
     # Here you're all set up with some basic functionality but you'll need to
     # improve on this decision tree to do a good job of navigating autonomously!
 
+    # pickup rock sample we are near
+    if Rover.near_sample:
+        Rover.send_pickup = True
+        Rover.mode = 'pickup'
+
     # Example:
     # Check if we have vision data to make decisions with
     if Rover.nav_angles is not None:
@@ -23,9 +28,33 @@ def decision_step(Rover):
                     Rover.throttle = Rover.throttle_set
                 else: # Else coast
                     Rover.throttle = 0
-                Rover.brake = 0
+                    Rover.brake = 0
+
                 # Set steering to average angle clipped to the range +/- 15
-                Rover.steer = np.clip(np.mean(Rover.nav_angles * 180/np.pi), -15, 15)
+                area = 0
+                angle_sum = 0
+                total_sum = 0
+                scale = 10
+                right_weight = 0.0
+                left_weight = 0.1
+                dist_weight = 0.1
+
+                # perform a weighted average over angles
+                for angle, dist in \
+                        zip(Rover.nav_angles, Rover.nav_dists):
+                    weight = 1
+                    if angle > 0:
+                        weight += left_weight
+                    else:
+                        weight += right_weight
+                    # weight further distant points more
+                    weight += dist_weight*(dist/scale)
+                    angle_sum += weight*angle
+                    total_sum += weight
+                Rover.steer = np.clip(angle_sum/total_sum * 180/np.pi, -15, 15)
+                # Rover.steer += 1*(Rover.goal_angle - np.deg2rad(Rover.yaw))
+                # Rover.steer = np.clip(np.mean(Rover.nav_angles * 180/np.pi), -15, 15)
+
             # If there's a lack of navigable terrain pixels then go to 'stop' mode
             elif len(Rover.nav_angles) < Rover.stop_forward:
                     # Set mode to "stop" and hit the brakes!
@@ -58,8 +87,19 @@ def decision_step(Rover):
                     # Release the brake
                     Rover.brake = 0
                     # Set steer to mean angle
-                    Rover.steer = np.clip(np.mean(Rover.nav_angles * 180/np.pi), -15, 15)
+                    Rover.steer = np.clip(np.mean(Rover.nav_angles * 180/np.pi + 5), -15, 15)
                     Rover.mode = 'forward'
+
+        elif Rover.mode == 'pickup': 
+            # stop and wait until we are finished picking up
+            Rover.throttle = 0
+            # Set brake to stored brake value
+            Rover.brake = Rover.brake_set
+            Rover.steer = 0
+            # when we are done picking it up, go back to forward mode
+            if not Rover.picking_up:
+                Rover.mode = 'forward'
+
     # Just to make the rover do something 
     # even if no modifications have been made to the code
     else:
